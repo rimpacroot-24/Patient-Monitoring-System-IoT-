@@ -1,0 +1,9 @@
+-- Signal pin of pulse sensor -> A0 of arduino
+-- Vcc pin of pulse sensor -> 5V of arduino
+-- GND pin of pulse sensor -> GND of arduino
+-- Vout of LM35 -> A1 of Arduino
+-- Tx of ESP8266 -> pin 10 of arduino
+-- Rx of ESP8266 -> pin 11 of arduino
+-- CH_PD and Vcc of ESP8266 -> 3.3 V of arduino
+-- GND of ESP8266 -> GND of arduino
+-- Push button ->  digital pin 8 of arduino
