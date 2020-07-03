@@ -54,3 +54,9 @@ Step 2:- Give name to your React. Condition type as Numeric and Test Freaquency 
   In the same way, make React for the Panic as shown.
   Select “Run action each time condition is met” and click on Save React.
   We have done with Web based work. Now, we will see code for Arduino.
+  
+  
+---- Now, connect your hardware components according to the circuit diagram and upload the code to the Arduino. Open Serial monitor to see what’s going inside the code.
+You will see data is updated defined in the Google sheets on Google drive, after the interval you defined in the timer setting.
+Press panic button for 4-5 seconds, you will get email that patient is in problem.
+
