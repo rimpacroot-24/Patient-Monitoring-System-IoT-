@@ -1,0 +1,173 @@
+-- First, we include all the libraries. We are using software serial to communicate with esp8266.
+ #include <SoftwareSerial.h>
+ #include "Timer.h"
+ #include <PulseSensorPlayground.h>     //pulse sensor library
+
+-- Make instance for timer, SoftwareSerial and pulse sensor to use in our code.
+ Timer t;
+ PulseSensorPlayground pulseSensor;
+ SoftwareSerial esp8266(10,11);   //Rx,Tx
+ 
+-- Set-up low-level interrupts for most accurate BPM match and enable DEBUG to show ongoing commands on serial monitor.
+ #define USE_ARDUINO_INTERRUPTS true           
+ #define DEBUG true
+ 
+-- Set your WiFi name , password and IP of thingspeak.com
+ #define SSID "*********"      // "your WiFiname"
+ #define PASS "**********"   // "wifi password"
+ #define IP "184.106.153.149"      // thingspeak.com ip
+ 
+-- Declare String to update information on ThingSpeak channel. You will need API key for this, which can be found from your ThingSpeak channel-> API key . Copy Write API key and paste here.
+ String msg = "GET /update?key=Your Api Key"; 
+ 
+-- In setup function, set the baud rate for serial communication between Arduino serial monitor and esp8266. Start the ESP communication by giving AT command to it and connect it by calling connectWiFi(); function. 
+   After that we will initialize Timers by calling t.every(time_interval, do_this); which will take the readings of the sensors and update on the channel after every time_interval you defined.
+ void setup()
+ {
+   Serial.begin(9600);
+   esp8266.begin(115200);
+     pulseSensor.analogInput(PulseWire);   
+   pulseSensor.blinkOnPulse(LED13);       //auto-magically blink Arduino's LED with heartbeat.
+   pulseSensor.setThreshold(Threshold);   
+
+    // Double-check the "pulseSensor" object was created and "began" seeing a signal.
+    if (pulseSensor.begin()) {
+     Serial.println("We created a pulseSensor Object !");  
+   }
+   Serial.println("AT");
+   esp8266.println("AT");
+   delay(3000);
+
+   if(esp8266.find("OK"))
+   {
+     connectWiFi();
+   }
+   t.every(10000, getReadings);
+    t.every(10000, updateInfo);
+ }
+ 
+ -- We have to make functions for connectWiFi(), panic_button(), update_info() and getReadings().{Make function for connectWiFi() which will return True or False depending upon Wi-Fi connected or not. AT+CWMODE=1 will make ESP8266 work in station mode. AT+CWJAP=\, command, used in this function, is to connect to your Access Point (your Wi-Fi router).}
+  boolean connectWiFi()
+ {
+   Serial.println("AT+CWMODE=1");
+   esp8266.println("AT+CWMODE=1");
+   delay(2000);
+   String cmd="AT+CWJAP=\"";
+   cmd+=SSID;
+   cmd+="\",\"";
+   cmd+=PASS;
+   cmd+="\"";
+   Serial.println(cmd);
+   esp8266.println(cmd);
+ ……
+ …..
+ 
+ -- Make getReadings(); function to take pulse sensor and LM35 readings and convert them to string using dtostrf(); function.
+  void getReadings(){
+   raw_myTemp = analogRead(A1);
+   Voltage = (raw_myTemp / 1023.0) * 5000;         // 5000 to get millivots.
+   tempC = Voltage * 0.1;                //in degree C
+   myTemp = (tempC * 1.8) + 32;             // conver to F
+   Serial.println(myTemp);
+   int myBPM = pulseSensor.getBeatsPerMinute();  // Calls function on our pulseSensor object that returns BPM as an "int".
+ if (pulseSensor.sawStartOfBeat()) {            // Constantly test to see if "a beat happened". 
+ Serial.println(myBPM);                        // Print the value inside of myBPM. 
+ }
+ delay(20);
+ 
+-- Define char array for BPM and temp and convert float value of these sensors to String using dtostrf().
+      char buffer1[10];
+       char buffer2[10];
+      BPM = dtostrf(myBPM, 4, 1, buffer1);
+      temp = dtostrf(myTemp, 4, 1, buffer2);
+     }
+   
+-- "AT+CIPSTART=\"TCP\",\"", AT Command will establish TCP command over port 80
+    void updateInfo()
+    {
+     String cmd = "AT+CIPSTART=\"TCP\",\"";
+     cmd += IP;
+     cmd += "\",80";
+     Serial.println(cmd);
+     esp8266.println(cmd);
+     delay(2000);
+     if(esp8266.find("Error"))
+    {
+     return;
+    }
+  
+-- Attach the readings with the GET URL using "&field1="; for pulse readings and "&field2="; for temperature readings. Send this information using “AT+CIPSEND=” command.
+   cmd = msg ;
+   cmd += "&field1=";    //field 1 for BPM
+   cmd += BPM;
+   cmd += "&field2=";  //field 2 for temperature
+   cmd += temp;
+   cmd += "\r\n";
+   Serial.print("AT+CIPSEND=");
+   esp8266.print("AT+CIPSEND=");
+   Serial.println(cmd.length());
+   esp8266.println(cmd.length());
+   if(esp8266.find(">"))
+   {
+     Serial.print(cmd);
+     esp8266.print(cmd);
+   }
+ …
+ …
+ 
+ -- Similarly, make function for panic_button. When button goes to HIGH, esp8266 send the information to the server using AT+CIPSTART and AT+CIPSEND commands.
+   void panic_button(){
+    panic = digitalRead(8);
+     if(panic == HIGH){
+     Serial.println(panic);
+      String cmd = "AT+CIPSTART=\"TCP\",\"";
+     cmd += IP;
+     cmd += "\",80";
+     Serial.println(cmd);
+     esp8266.println(cmd);
+…..
+..
+
+-- Attach this information to "&field3=“.
+    cmd = msg ;
+    cmd += "&field3=";    
+    
+-- In loop function, call panic_button() and timers using t.update() function.
+    void loop()
+    {
+     panic_button();
+    start: //label
+       error=0;
+       t.update();            
+    ……
+    ……
+    
+ *********************************** DONE *********************************************
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+ 
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
