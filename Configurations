@@ -1,0 +1,56 @@
+-- Configuring ThingSpeak to record Patient Data online :
+ ThingSpeak provides very good tool for IoT based projects. 
+ By using ThingSpeak site, we can monitor our data and control our system over the Internet, using the Channels and webpages provided by ThingSpeak. ThingSpeak ‘Collects’ the data from the sensors, ‘Analyze and Visualize’ the data and ‘Acts’ by triggering a reaction.
+ We will use ThingSpeak to monitor patient heartbeat and temperature online using internet.
+ We will also use IFTTT platform to connect ThingSpeak to email/message service so that alert message can be sent whenever the patient is in critical state.
+ 
+Steps:
+Step 1:- First of all, user needs to Create a Account on ThingSpeak.com, then Sign In and click on Get Started.
+Step 2:-  Now go to the ‘Channels’ menu and click on New Channel option on the same page for further process.
+Step 3:- Now you will see a form for creating the channel, fill in the Name and Description as per your choice.
+ Then fill ‘Pulse Rate’, ‘Temperature’ and ‘Panic’ in Field 1, Field 2 and Field 3 labels, tick the checkboxes for the Fields. 
+ Also tick the check box for ‘Make Public’ option below in the form and finally Save the Channel. Now your new channel has been created.
+Step 4:- You will see three charts as shown below. Note the Write API key, we will use this key in our code.
+Step 5:- Now, we will use ThingHTTP app of the server to trigger the IFTTT applet for data entry to Google sheets and send email/sms. 
+ ThingHTTP enables communication among devices, websites, and web services without having to implement the protocol on the device level. 
+ You can specify actions in ThingHTTP, which you want to trigger using other ThingSpeak apps such as React.
+ To make New ThingHTTP, we will need URL for triggering which we will get from IFTTT.
+
+-- Configuring IFTTT for triggering Mail/SMS based on ThingSpeak Values :
+Steps:
+Step 1:- Login to IFTTT and search for Webhooks and click on it.
+Step 2:- Click on Documentation.
+Step 3:- Type “Patient_Info” in the event box and copy the URL. We will use this URL in ThingHTTP.
+ Now let’s make Applet to link ThingHTTP to Google sheet and to send email/sms. After that we will jump to complete our ThingHTTP.
+Step 4:- Click on New Applete in My Applete option.
+Step 5:- Click on “+this” and search for Webhooks and click on it. Choose trigger as “Receive a web request”.
+Step 6:- Type the Event Name which is same as you write in the event box in webhooks URL. Click on Create Trigger.
+Step 7:- Click on “+that” and search for Google Sheets and click on it.
+ Click on Add row to spreadsheet.
+Step 8:- Give any name to your sheet. In formatted row box, you have date and time, event name, BPM value and body temperature which will be written as shown.
+Step 9:- Review your applet and click on finish.
+ In the same way, we have to make applet for sending email when Panic event is occurred.
+ So again click on “+this” and select Webhooks, then in event name enter “Panic”. In “+that” search for Gmail and click on it.
+ Now, click on Send an email.
+ Type the email addresses on which you wish to receive email when there is a panic to the patient.
+ Type the body content you wish to send in the email and click on create action. Review it and finish.
+ We have made our applets to perform the tasks. Now, come back to Thingspeak->Apps->ThingHTTP.
+ 
+ -- ThingHTTP for connecting ThingSpeak with IFTTT :
+ Steps :
+ Step 1:- Click on New ThingHTTP. Give any name and Paste the URL that you copied from the webhooks documentation. Fill Remaining information as shown below.
+  In Body, we have to write the information that we want to send to the IFTTT applet. We are sending patient Pulse reading and temperature. So the format is
+  After filling these informations, click on Save ThingHTTP.
+  In the same manner, we have to make ThingHTTP for “Panic”. Follow the same steps.
+  In URL, write Panic in place of Patient_Info. Body remains empty and All other information are same as in previous ThingHTTP. Save it.
+  Now, we have to make React to trigger the URL.
+  React works with ThingHTTP app to perform actions when channel data meets a certain condition.
+  To make React, click on Apps -> React. Click on New React.
+Step 2:- Give name to your React. Condition type as Numeric and Test Freaquency as on Data Insertion.
+  Choose the Condition on which you want to trigger the URL. Select your channel from the If Channel drop down menu. 
+  Choose field 1 i.e Pulse rate and make condition of greater than any value. I have used 60. As shown
+  Choose ThingHTTP from Action drop down menu and select the ThingHTTP.
+  Select “Run action each time condition is met” and click on Save React.
+  In the same way, make React for the Panic as shown.
+  Select “Run action each time condition is met” and click on Save React.
+  We have done with Web based work. Now, we will see code for Arduino.
